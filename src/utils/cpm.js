@@ -11,7 +11,7 @@ export function calculateCPM(tasks) {
     taskMap.set(t.id, {
       ...t,
       duration: Number(t.duration) || 0,
-      precedents: t.precedents ? t.precedents.filter(p => p.trim()) : [],
+      precedents: t.precedents ? t.precedents.map(p => p.trim()).filter(p => p && tasks.some(task => task.id === p)) : [],
       successors: [],
       es: 0, ef: 0, ls: 0, lf: 0, slack: 0,
       isCritical: false
@@ -161,7 +161,9 @@ export function calculateCPM(tasks) {
   // If task B depends on task A, we add a dummy arrow from A.end -> B.start
   taskMap.forEach((task, id) => {
     task.precedents.forEach(precId => {
-      const precEnd = taskToNodes.get(precId).end;
+      const precNode = taskToNodes.get(precId);
+      if (!precNode) return; // Guard against invalid precedent ID
+      const precEnd = precNode.end;
       const taskStart = taskToNodes.get(id).start;
       edges.push({
         from: precEnd,
